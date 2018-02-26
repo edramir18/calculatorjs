@@ -1,9 +1,2 @@
-$color: red;
-
-body {
-    background-color: $color;
-    color: silver;
-}
-p {
-    display: flex;
-}
+@import 'base';
+@import 'layout';
