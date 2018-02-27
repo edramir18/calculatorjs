@@ -1,12 +1,17 @@
 'use strict'
 const screen = document.querySelector('#screen')
 const command = document.querySelector('#commands')
-let memory
+let input = ''
+let infix = ''
+let memory = ''
 
 document.addEventListener('DOMContentLoaded', (e) => {
   console.log('DOM Loaded')
   const numbers = document.querySelectorAll('button[data-number]')
   numbers.forEach(number => number.addEventListener('click', numberPressedHandler))
+
+  const pointButton = document.querySelector('button[data-point]')
+  pointButton.addEventListener('click', addPoint)
 
   const operators = document.querySelectorAll('button[data-number]')
   operators.forEach(number => number.addEventListener('click', operatorPressedHandler))
@@ -17,11 +22,18 @@ document.addEventListener('DOMContentLoaded', (e) => {
   const deleteButton = document.querySelector('button[data-delete]')
   deleteButton.addEventListener('click', ceButton)
 
-  const pointButton = document.querySelector('button[data-point]')
-  pointButton.addEventListener('click', addPoint)
+  const equalButton = document.querySelector('button[data-equal]')
+  equalButton.addEventListener('click', resolveCommand)
 
   document.addEventListener('keydown', keyDownEventHandler)
 })
+
+function updateDisplay () {
+  screen.textContent = input === '' ? 0 : input
+  command.value = infix === '' ? 0 : infix
+  // command.focus()
+  command.scrollLeft = command.scrollWidth
+}
 
 function numberPressedHandler (event) {
   addNumber(parseInt(event.target.dataset.number))
@@ -32,72 +44,95 @@ function operatorPressedHandler (event) {
 }
 
 function addNumber (number) {
-  if (memory) {
-    memory = undefined
-    screen.textContent = '0'
+  if (input === Infinity) return
+  if (memory !== '') {
+    memory = ''
+    input = ''
+    infix = ''
   }
-  const value = parseInt(screen.textContent)
-  if (value === 0 && /[.]/.test(screen.textContent) === false) {
-    screen.textContent = number
-    if (/[+\-*/]/.test(command.textContent) === true) {
-      command.textContent += number
-    } else {
-      command.textContent = number
+  if (input === '') {
+    if (number > 0) {
+      input = `${number}`
+      infix += `${number}`
     }
-  } else if (screen.textContent.length < 10) {
-    screen.textContent += number
-    command.textContent += number
+  } else {
+    input += `${number}`
+    infix += `${number}`
   }
+  updateDisplay()
 }
 
 function addPoint () {
-  if (memory) {
-    memory = undefined
-    screen.textContent = '0'
+  if (input === Infinity) return
+  if (memory !== '') {
+    memory = ''
+    input = ''
+    infix = ''
   }
-  if (/[.]/.test(screen.textContent) === false && screen.textContent.length < 10) {
-    screen.textContent += '.'
-    command.textContent += '.'
+  if (/[.]/.test(input) === false && input.length < 10) {
+    input += input === '' ? '0.' : '.'
+    infix += input === '0.' ? input : '.'
   }
-}
-
-function acButton () {
-  screen.textContent = '0'
-  command.textContent = '0'
-}
-function ceButton () {
-  screen.textContent = '0'
-  const regexp = /[+\-*/]\s\d*$/.exec(command.textContent)
-  if (regexp) {
-    command.textContent = command.textContent.substr(0, regexp.index + 2)
-  } else {
-    command.textContent = '0'
-  }
+  updateDisplay()
 }
 
 function addOperator (operator) {
-  if (memory) {
-    command.textContent = memory
-    memory = undefined
+  if (input === Infinity) return
+  if (memory !== '') {
+    infix = memory
+    input = ''
+    memory = ''
   }
-  const regexp = /[+\-*/]\s$/.exec(command.textContent)
+  const regexp = /[+\-*/]\s$/.exec(infix)
   if (regexp) {
-    command.textContent = `${command.textContent.substr(0, regexp.index - 1)} ${operator} `
+    infix = `${infix.substr(0, regexp.index - 1)} ${operator} `
   } else {
-    command.textContent += ` ${operator} `
-    screen.textContent = '0'
+    infix += ` ${operator} `
+    input = ''
   }
+  updateDisplay()
+}
+
+function acButton () {
+  input = ''
+  infix = ''
+  memory = ''
+  updateDisplay()
+}
+function ceButton () {
+  if (input === Infinity) return
+  if (memory !== '') return acButton()
+  input = ''
+  const regexp = /[+\-*/]\s\d*$/.exec(infix)
+  if (regexp) {
+    infix = infix.substr(0, regexp.index + 2)
+  } else {
+    infix = ''
+  }
+  updateDisplay()
 }
 
 function resolveCommand () {
-  if (/[+\-*/]\s$/.test(command.textContent)) return
-  if (/[+\-*/]/.test(command.textContent) === false) return
-  const commands = command.textContent.split(' ')
+  if (/[+\-*/]\s$/.test(infix)) return
+  if (/[+\-*/]/.test(infix) === false) return
+  const commands = infix.split(' ')
   const postfix = fromInfixToPostfix(commands)
   const result = evaluatePostFix(postfix)
-  memory = result
-  command.textContent = '0'
-  screen.textContent = result
+  if (result === Infinity) {
+    input = result
+    memory = ''
+  } else {
+    memory = result
+    input = result
+  }
+  updateDisplay()
+
+  function formatResult (number) {
+    if (/[.]/.test(number)) {
+      const [integer, decimal] = String(number).split('.')
+      return 'number.toFixed(decimal.length>10 ? )'
+    }
+  }
 }
 
 function fromInfixToPostfix (commands) {
@@ -119,7 +154,6 @@ function fromInfixToPostfix (commands) {
   while (operators.length > 0) {
     output.push(operators.pop())
   }
-
   return output
 
   function checkPrecende (newOperator, topOperator) {
@@ -135,26 +169,32 @@ function fromInfixToPostfix (commands) {
 
 function evaluatePostFix (postfix) {
   let result
+  let operands = []
   while (postfix.length > 0) {
-    const a = Number(postfix.shift())
-    const b = Number(postfix.shift())
     const operator = postfix.shift()
-    switch (operator) {
-      case '+':
-        result = a + b
-        break
-      case '-':
-        result = a - b
-        break
-      case '*':
-        result = a * b
-        break
-      case '/':
-        result = a / b
-        break
-    }
-    if (postfix.length > 0) {
-      postfix.unshift(result)
+    if (/[+\-*/]/.test(operator)) {
+      const b = Number(operands.pop())
+      const a = Number(operands.pop())
+      switch (operator) {
+        case '+':
+          result = a + b
+          break
+        case '-':
+          result = a - b
+          break
+        case '*':
+          result = a * b
+          break
+        case '/':
+          if (b === 0) return Infinity
+          result = a / b
+          break
+      }
+      if (postfix.length > 0) {
+        operands.push(result)
+      }
+    } else {
+      operands.push(operator)
     }
   }
   return result

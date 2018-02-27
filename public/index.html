@@ -14,11 +14,11 @@
     <div class="calculator">
         <div class="display">
             <p id="screen" class="screen">0</p>
-            <p id="commands" class="commands">0</p>
+            <input id="commands" class="commands" type="text" value="0" readonly/>
         </div>
         <div class="keyboard">
-            <button class="key" data-escape="ac">AC</button>
-            <button class="key" data-delete="ce">CE</button>
+            <button class="key" data-escape="true">AC</button>
+            <button class="key" data-delete="true">CE</button>
             <button class="key" data-operator="/">/</button>
             <button class="key" data-operator="*">x</button>
             <button class="key" data-number="7">7</button>
@@ -32,7 +32,7 @@
             <button class="key" data-number="1">1</button>
             <button class="key" data-number="2">2</button>
             <button class="key" data-number="3">3</button>
-            <button class="key equal">=</button>
+            <button class="key equal" data-equal="true">=</button>
             <button class="key zero" data-number="0">0</button>
             <button class="key" data-point=".">.</button>
         </div>

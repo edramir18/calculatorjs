@@ -27,6 +27,8 @@ body {
 }
 
 .commands {
+  width: 100%;
+  border: none;
   text-align: right;
 }
 
