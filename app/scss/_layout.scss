@@ -9,6 +9,9 @@
   text-align: right;  
   font-family: 'VT323', monospace;
 }
+.commands {
+  text-align: right;
+}
 .keyboard {  
   display: grid;
   grid-template-rows: repeat(5, 3em);
