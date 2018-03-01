@@ -6,14 +6,13 @@ let infix = ''
 let memory = ''
 
 document.addEventListener('DOMContentLoaded', (e) => {
-  console.log('DOM Loaded')
   const numbers = document.querySelectorAll('button[data-number]')
   numbers.forEach(number => number.addEventListener('click', numberPressedHandler))
 
   const pointButton = document.querySelector('button[data-point]')
   pointButton.addEventListener('click', addPoint)
 
-  const operators = document.querySelectorAll('button[data-number]')
+  const operators = document.querySelectorAll('button[data-operator]')
   operators.forEach(number => number.addEventListener('click', operatorPressedHandler))
 
   const escapeButton = document.querySelector('button[data-escape]')
@@ -37,6 +36,7 @@ function updateDisplay () {
 
 function numberPressedHandler (event) {
   addNumber(parseInt(event.target.dataset.number))
+  event.preventDefault()
 }
 
 function operatorPressedHandler (event) {
@@ -45,6 +45,7 @@ function operatorPressedHandler (event) {
 
 function addNumber (number) {
   if (input === Infinity) return
+  if (memory === '' && String(input).length > 11) return
   if (memory !== '') {
     memory = ''
     input = ''
@@ -77,7 +78,7 @@ function addPoint () {
 }
 
 function addOperator (operator) {
-  if (input === Infinity) return
+  if (input === Infinity || infix === '') return
   if (memory !== '') {
     infix = memory
     input = ''
@@ -123,16 +124,9 @@ function resolveCommand () {
     memory = ''
   } else {
     memory = result
-    input = result
+    input = String(result).length > 11 ? result.toPrecision(11) : result
   }
   updateDisplay()
-
-  function formatResult (number) {
-    if (/[.]/.test(number)) {
-      const [integer, decimal] = String(number).split('.')
-      return 'number.toFixed(decimal.length>10 ? )'
-    }
-  }
 }
 
 function fromInfixToPostfix (commands) {
